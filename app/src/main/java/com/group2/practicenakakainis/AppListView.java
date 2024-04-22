@@ -21,6 +21,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -52,19 +54,13 @@ public class AppListView extends AppCompatActivity {
             return insets;
         });
 
-        listView = findViewById(R.id.listApps);
+        RecyclerView recyclerView = findViewById(R.id.listApps);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         queryIntents();
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            App selectedApp = appList.get(position);
-            selectedApp.isBlocked = true;
-            blockApp(selectedApp);
-            goHome();
-        });
-
         adapter = new AppAdapter(this, appList);
-        listView.setAdapter(adapter);
+        recyclerView.setAdapter(adapter);
 
         adapter.setOnSwitchClickListener((position, isChecked) -> {
             App selectedApp = appList.get(position);
@@ -82,6 +78,7 @@ public class AppListView extends AppCompatActivity {
             }
         });
     }
+
 
     public void blockApp(App app) {
         Set<String> blockedApps = getBlockedApps();

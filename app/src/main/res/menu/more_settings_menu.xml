@@ -9,4 +9,7 @@
     <item
         android:title="Delete"
         android:id="@+id/delete_task"/>
+    <item
+        android:title="Pin"
+        android:id="@+id/pin_task"/>
 </menu>

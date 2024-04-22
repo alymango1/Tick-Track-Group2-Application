@@ -161,6 +161,8 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
                             ((MainActivity) context).changeName(task);
                             clickSound.start();
                             return true;
+                        } else if (id == R.id.pin_task){
+                            ((MainActivity) context).pinTask(tasks, task);
                         }
                         return false;
                     }

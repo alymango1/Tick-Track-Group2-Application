@@ -1,5 +1,7 @@
 package com.group2.practicenakakainis;
 
+import static com.group2.practicenakakainis.MainActivity.SHARED_PREFERENCES_NAME;
+
 import android.content.Context;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -12,23 +14,23 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.HashMap;
 import java.util.List;
 
-public class AppAdapter extends ArrayAdapter<App> {
+
+
+public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> {
 
     private Context context;
     private List<App> appList;
-    private LayoutInflater inflater;
     private OnSwitchClickListener onSwitchClickListener;
     private SparseBooleanArray itemStateArray = new SparseBooleanArray();
 
-
     public AppAdapter(@NonNull Context context, @NonNull List<App> objects) {
-        super(context, 0, objects);
         this.context = context;
         this.appList = objects;
-        inflater = LayoutInflater.from(context);
     }
 
     public void setOnSwitchClickListener(OnSwitchClickListener listener) {
@@ -37,42 +39,64 @@ public class AppAdapter extends ArrayAdapter<App> {
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        View listItems = convertView;
-        if (listItems == null) {
-            listItems = inflater.inflate(R.layout.app_view, parent, false);
-        }
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.app_view, parent, false);
+        return new ViewHolder(view);
+    }
 
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         App app = appList.get(position);
-        TextView name = listItems.findViewById(R.id.appName);
-        ImageView icon = listItems.findViewById(R.id.appIcon);
-        Switch switcher = listItems.findViewById(R.id.switcher);
 
-        name.setText(app.name);
-        icon.setImageDrawable(app.icon);
+        holder.name.setText(app.name);
+        holder.icon.setImageDrawable(app.icon);
 
-        switcher.setOnCheckedChangeListener(null);
+        // Retrieve the state of the switch from SharedPreferences
+        boolean isChecked = loadSwitchState(app.activityInfo);
+        holder.switcher.setChecked(isChecked);
 
-        // Restore the state of the switch from the SparseBooleanArray
-        if (itemStateArray.get(position, false)) {
-            switcher.setChecked(true);
-        } else {
-            switcher.setChecked(false);
-        }
-
-        switcher.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Save the state of the switch to the SparseBooleanArray
-            itemStateArray.put(position, isChecked);
+        holder.switcher.setOnCheckedChangeListener((buttonView, isCheckedSwitch) -> {
+            // Save the state of the switch to SharedPreferences and SparseBooleanArray
+            saveSwitchState(app.activityInfo, isCheckedSwitch);
+            itemStateArray.put(position, isCheckedSwitch);
 
             if (onSwitchClickListener != null) {
-                onSwitchClickListener.onSwitchClick(position, isChecked);
+                onSwitchClickListener.onSwitchClick(position, isCheckedSwitch);
             }
         });
+    }
 
-        return listItems;
+    @Override
+    public int getItemCount() {
+        return appList.size();
+    }
+
+    private void saveSwitchState(String key, boolean state) {
+        context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(key, state)
+                .apply();
+    }
+
+    private boolean loadSwitchState(String key) {
+        return context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE)
+                .getBoolean(key, false);
     }
 
     public interface OnSwitchClickListener {
         void onSwitchClick(int position, boolean isChecked);
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        TextView name;
+        ImageView icon;
+        Switch switcher;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            name = itemView.findViewById(R.id.appName);
+            icon = itemView.findViewById(R.id.appIcon);
+            switcher = itemView.findViewById(R.id.switcher);
+        }
     }
 }

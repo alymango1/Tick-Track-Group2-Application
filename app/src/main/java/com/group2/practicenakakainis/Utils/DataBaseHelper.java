@@ -26,6 +26,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     private static final String COL_4 = "COLOR";
 
+    private static final String COL_5 = "PINNED";
+
 
     public DataBaseHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, 2);
@@ -33,7 +35,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, TASK TEXT, STATUS INTEGER, COLOR INTEGER)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, TASK TEXT, STATUS INTEGER, COLOR INTEGER, PINNED INTEGER DEFAULT 0)");
     }
 
     @Override
@@ -41,6 +43,23 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 2) {
             db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_4 + " INTEGER");
         }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_5 + " INTEGER DEFAULT 0");
+        }
+    }
+
+    public void pinTask(int id) {
+        db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_5, 1);
+        db.update(TABLE_NAME, values, COL_1 + "=?", new String[]{String.valueOf(id)});
+    }
+
+    public void unpinTask(int id) {
+        db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COL_5, 0);
+        db.update(TABLE_NAME, values, COL_1 + "=?", new String[]{String.valueOf(id)});
     }
 
     public void insertTask(ToDoModel model) {
@@ -89,7 +108,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.beginTransaction();
         try {
             cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
-            if (cursor != null) if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 do {
                     ToDoModel task = new ToDoModel();
                     task.setId(cursor.getInt(cursor.getColumnIndex(COL_1)));
@@ -102,7 +121,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
         } finally {
             db.endTransaction();
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
         }
         return modelList;
     }

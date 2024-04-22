@@ -128,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
             replaceFragments(new HomeFragment());
             FloatingActionButton fab = findViewById(R.id.add_task_button);
             fab.setVisibility(View.VISIBLE);
+            TextView tv = findViewById(R.id.textView4);
+            tv.setText("Tasks");
             homeblockSounds.start();
         } else if (itemId == R.id.fabxd) {
             // Handle the selection of the second menu item
@@ -135,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
             replaceFragments(new BlockFragment());
             FloatingActionButton fab = findViewById(R.id.add_task_button);
             fab.setVisibility(View.GONE);
+            TextView tv = findViewById(R.id.textView4);
+            tv.setText("Block");
             homeblockSounds.start();
         }
 
@@ -526,6 +530,31 @@ public class MainActivity extends AppCompatActivity {
         });
         dialog.show();
     }
+
+    public void pinTask(List<ToDoModel> tasks, ToDoModel task) {
+        // Get the instance of DataBaseHelper
+        DataBaseHelper dbHelper = new DataBaseHelper(this);
+
+        // Pin the task in the database
+        dbHelper.pinTask(task.getId());
+
+        // Remove the task from its current position in the list
+        tasks.remove(task);
+
+        // Set the task as pinned
+        task.setPinned(true);
+
+        // Add the task back at the top of the list
+        tasks.add(0, task);
+
+        // Get the instance of HomeFragment and call loadTasks
+        HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
+        if (homeFragment != null) {
+            homeFragment.loadTasks();
+        }
+    }
+
+
 
     private void updateTaskColor(ToDoModel task, int colorResource) {
         // Update the color of the task

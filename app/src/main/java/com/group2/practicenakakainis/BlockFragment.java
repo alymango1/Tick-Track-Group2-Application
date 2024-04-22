@@ -1,7 +1,10 @@
 package com.group2.practicenakakainis;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -16,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,14 +42,20 @@ public class BlockFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showProgressDialog();
+                progressDialog = new ProgressDialog(getActivity());
+                progressDialog.setMessage("Loading...");
+                progressDialog.setCancelable(true);
+                progressDialog.show();
 
-                if (AccessibilityUtils.isAccessibilityServiceRunning(getActivity(), MyAccessibilityService.class)) {
+                if (AccessibilityUtils.isAccessibilityServiceRunning(getActivity(), MyAccessibilityService.class) && !MainActivity.isPickerShown) {
                     blockListView(v);
                     buttonSound.start();
-                }else{
+                    progressDialog.dismiss();
+                }else if (!MainActivity.isPickerShown){
+                    MainActivity.isPickerShown = true;
                     checkAccessibility();
                     buttonSound.start();
+                    progressDialog.dismiss();
                 }
             }
 
@@ -57,39 +67,36 @@ public class BlockFragment extends Fragment {
             public void checkAccessibility() {
                 Toast.makeText(getActivity(), "Accessibility Service is not enabled", Toast.LENGTH_SHORT).show();
 
-                // Create the dialog
-                Dialog dialog = new Dialog(getContext());
-                dialog.setContentView(R.layout.dialog_accessibility_settings);
-                dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
-                dialog.setCancelable(false);
+                // Inflate the layout
+                LayoutInflater inflater = getActivity().getLayoutInflater();
+                View view = inflater.inflate(R.layout.dialog_accessibility_settings, null);
 
+                // Set the maximum height of the ScrollView
+                @SuppressLint({"MissingInflatedId", "LocalSuppress"}) ScrollView scrollView = view.findViewById(R.id.scrollability);
+                scrollView.getLayoutParams().height = 1000; // Or whatever max height you want
 
-                // Get the OK button from the layout and set a click listener
-                Button okButton = dialog.findViewById(R.id.ok_button);
-                okButton.setOnClickListener(new View.OnClickListener() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setView(view);
+                builder.setCancelable(false);
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onClick(DialogInterface dialog, int which) {
                         // Open the accessibility settings
+                        MainActivity.isPickerShown = false;
                         AccessibilityUtils.openAccessibilitySettings(getActivity());
                         dialog.dismiss();
+                        progressDialog.dismiss();
                     }
                 });
 
-                WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
-                layoutParams.copyFrom(dialog.getWindow().getAttributes());
-                layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
-                layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                dialog.getWindow().setAttributes(layoutParams);
+
+                AlertDialog dialog = builder.create();
+
+                // Set the background drawable resource for rounded corners
+                dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
 
                 dialog.show();
-            }
-
-
-            public void showProgressDialog() {
-                progressDialog = new ProgressDialog(getActivity());
-                progressDialog.setMessage("Loading...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
             }
         });
     }
