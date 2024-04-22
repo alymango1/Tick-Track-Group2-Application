@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/homexd"
+        android:icon="@drawable/baseline_home_24"
+        android:title="Home" />
+    <item
+        android:title=""
+        android:id="@+id/fabxd"
+        android:enabled="false"/>
+    <item
+        android:title="Block"
+        android:id="@+id/blockxd"
+        android:icon="@drawable/baseline_block_24"/>
+</menu>

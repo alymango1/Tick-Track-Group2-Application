@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Tick Track</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="accessibility_service_label">Tick Track\n</string>
+    <string name="accessibility_service_description">Tick Track Description na wala pang nakalagay lmao</string>
+</resources>

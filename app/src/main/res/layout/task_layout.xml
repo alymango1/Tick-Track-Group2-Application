@@ -1,0 +1,60 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_color"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/button_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@+id/more_settings"
+        android:background="#00FFFFFF"
+        android:gravity="left"
+        android:text="This is Folder 1"
+        android:textColor="@android:color/black"
+        android:textSize="24dp" />
+
+    <ImageButton
+        android:id="@+id/more_settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="17dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/baseline_more_vert_24" />
+
+    <ImageButton
+        android:id="@+id/pause_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="70dp"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        android:src="@drawable/baseline_pause_24" />
+
+    <ImageButton
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="17dp"
+        android:visibility="gone"
+        android:src="@drawable/baseline_stop_24"
+        android:background="@android:color/transparent"/>
+
+    <ImageButton
+        android:id="@+id/continue_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="70dp"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        android:src="@drawable/baseline_play_arrow_24" />
+</RelativeLayout>
