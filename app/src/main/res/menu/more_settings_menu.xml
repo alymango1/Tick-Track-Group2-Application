@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:title="Pin"
+        android:id="@+id/pin_task"/>
+    <item
         android:id="@+id/change_name"
         android:title="Change Name" />
     <item
@@ -9,7 +12,5 @@
     <item
         android:title="Delete"
         android:id="@+id/delete_task"/>
-    <item
-        android:title="Pin"
-        android:id="@+id/pin_task"/>
+
 </menu>

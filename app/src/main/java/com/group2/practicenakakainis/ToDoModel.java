@@ -3,8 +3,10 @@ package com.group2.practicenakakainis;
 public class ToDoModel {
     private String task;
     private int id, status;
+
+
     private int color = R.color.background;
-    private boolean pinned;  // Add this line
+    private boolean pinned;
 
     public String getTask() {
         return task;
@@ -38,11 +40,11 @@ public class ToDoModel {
         this.status = status;
     }
 
-    public boolean isPinned() {  // Add this method
+    public boolean isPinned() {
         return pinned;
     }
 
-    public void setPinned(boolean pinned) {  // Add this method
+    public void setPinned(boolean pinned) {
         this.pinned = pinned;
     }
 }

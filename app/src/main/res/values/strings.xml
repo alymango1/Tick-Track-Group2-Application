@@ -3,22 +3,27 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="accessibility_service_label">Tick Track\n</string>
-    <string name="accessibility_service_description">Tick Track Description na wala pang nakalagay lmao</string>
+    <string name="accessibility_service_description">Tick Track is designed to enhance time management skills by limiting access to potentially distracting applications during designated task periods. This innovative tool also offers customizable color-coding and pinning features for prioritization and organization of tasks. Tick Track is the result of dedicated research and development by a student team led by Jorge Fuertes. We appreciate your support in downloading our application and trust that it will significantly improve your productivity. Thank you, and we wish you success in completing your tasks with Tick Track.</string>
     <string name="importance_of_accessibility">\tTick Track Service will be responsible for tracking and managing the restriction of applications. It detects whether the user opened a blocked application in the app itself. Without turning this service on, blocking apps would not be possible at all. This feature is the main highlight of the application. Therefore, everyone is encouraged to turn Tick Track Service on.</string>
-    <string name="first_step">\tOnce you click the "Block Apps" button, it will take you to the accessibility settings. In there you need to find "Tick Track" to and enable it. </string>
-    <string name="second_step">\tUnder downloaded apps, you should be able to see Tick Track. Tap the name of the app to turn it on.</string>
-<string name="third_step">\tClick Tick Track, and turn on the switch.</string>
-    <string name="fourth_step">\tA dialog would pop-up that would show what the service can do in the device. Tap allow to enable the service</string>
-    <string name="fifth_step">\tAfter allowing the service to be enabled, the switch should turn on. You can now block applications through Tick Track application!</string>
-    <string name="sixth_step">\tIn higher versions of Android, Google has been tightening up the security for accessibility. This message is always present in applications that are not put up in Google Play Store.</string>
-    <string name="seventh_step">\tGo to settings and find Applications / Application Management.</string>
-    <string name="eight_step">\tFind Applications List.</string>
-    <string name="ninth_step">\tFind Tick Track application in the Applications List.</string>
-    <string name="tenth_step">\tOnce you tap Tick Track, look for the 3-vertical dots at the upper-corner of the application info. Tap it.</string>
-    <string name="eleventh_step">\tTap Unlock Restricted Setting / Allow Restricted Settings.</string>
-    <string name="twelveth_step">\tIt should show a toast message at the bottom of the device. The application was now allowed to access restricted settings.</string>
-    <string name="thirteenth_step">\tGo back to the app and tap \"Block Apps\" button again or go to Accessibility in Settings. Find Tick Track again and you should be able to turn it on now.</string>
-    <string name="fourteenth_step">\tTurn on the switch of Tick Track and allow it to be enabled. You should be able to block and restrict applications now through the app itself.</string>
+    <string name="first_step">\tOnce you click the "Block Apps" button, you will be directed to the accessibility settings once you select the "Block Apps" option. You must locate "Tick Track" and turn it on there. </string>
+    <string name="second_step">\tTick Track should be visible under downloaded apps. To activate the app, tap its name.</string>
+<string name="third_step">\tPress the Tick Track button to activate the switch.</string>
+    <string name="fourth_step">\tA dialog would pop-up that would show what the service can do in the device. Tap allow to enable the service.</string>
+    <string name="fifth_step">\tThe switch is intended to activate after enabling the service. With the Tick Track app, you can now restrict applications!</string>
+    <string name="sixth_step">\tIn higher versions of Android, Google has implemented stricter security measures for accessibility. As a result, you might encounter a message in applications that are not available on the Google Play Store.</string>
+    <string name="seventh_step">\tOpen your device\'s settings and navigate to the \"Applications\" or \"Application Management\" section.</string>
+    <string name="eight_step">\tLook for the "Applications List" option within the \"Applications\" or \"Application Management\"</string>
+    <string name="ninth_step">\tScroll down through the Applications List and find the "Tick Track" application.</string>
+    <string name="tenth_step">\t Once you locate the \"Tick Track\" app, you\'ll notice three vertical dots in the upper corner of the application info. Tap on those dots.</string>
+    <string name="eleventh_step">\tIn the options that appear, select \"Unlock Restricted Setting\" or \"Allow Restricted Settings\".</string>
+    <string name="twelveth_step">\tIt should show a toast message at the bottom of the device. Now, the application could access settings that were prohibited.</string>
+    <string name="thirteenth_step">\tReturn to the app and press the \"Block Apps\" button once more, or open the Settings menu and select Accessibility. You should now be able to activate Tick Track after finding it once more.</string>
+    <string name="fourteenth_step">\tTurn the Tick Track switch on and permit it to activate. Applications should now be able to be restricted and blocked directly from within the app.</string>
+    <string name="open_drawer">ssibal</string>
+    <string name="nav_header_subtitle">Created by Group 2</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="nav_header_title">Tick Track</string>
+
 
 
 </resources>

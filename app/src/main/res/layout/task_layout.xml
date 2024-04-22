@@ -4,12 +4,21 @@
     android:layout_height="wrap_content"
     android:padding="16dp">
 
+    <ImageView
+        android:id="@+id/pin_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:visibility="gone"
+        android:src="@drawable/baseline_push_pin_24"/>
+
     <Button
         android:id="@+id/button_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toStartOf="@+id/more_settings"
         android:background="#00FFFFFF"
+        android:layout_marginStart="5dp"
         android:gravity="left"
         android:text="This is Folder 1"
         android:textColor="@android:color/black"

@@ -9,12 +9,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.media.MediaPlayer;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -53,6 +55,8 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
             holder.continueButton = convertView.findViewById(R.id.continue_button);
             holder.stopButton = convertView.findViewById(R.id.stop_button);
             holder.layout = convertView.findViewById(R.id.layout_color);
+            holder.pinIcon = convertView.findViewById(R.id.pin_icon);
+
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -63,7 +67,11 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
 
         holder.layout.setBackgroundColor(task.getColor());
 
-
+        if (task.isPinned()) {
+            holder.pinIcon.setVisibility(View.VISIBLE);
+        } else {
+            holder.pinIcon.setVisibility(View.GONE);
+        }
 
 
         // Set the click listener on the Button
@@ -136,18 +144,28 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
             }
         });
 
-        // Set the click listener on the ImageButton to show the PopupMenu
         holder.moreSettingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                int clickedPosition = position;  // Store the clicked position
+
                 PopupMenu popup = new PopupMenu(context, v);
                 popup.getMenuInflater().inflate(R.menu.more_settings_menu, popup.getMenu());
+                final TaskAdapter adapter = TaskAdapter.this;
+
+                // Set the title of the pin_task MenuItem based on the pinned status of the task
+                MenuItem pinMenuItem = popup.getMenu().findItem(R.id.pin_task);
+                if (task.isPinned()) {
+                    pinMenuItem.setTitle("Unpin");
+                } else {
+                    pinMenuItem.setTitle("Pin");
+                }
 
                 PopupMenu.OnMenuItemClickListener listener = new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         int id = item.getItemId();
-                        ToDoModel task = tasks.get(position);  // Get the task at the current position
+                        ToDoModel task = tasks.get(clickedPosition);  // Use the clicked position
                         popSound.start();
                         if (id == R.id.delete_task) {
                             ((MainActivity) context).deleteTask(task.getId());
@@ -157,13 +175,26 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
                             ((MainActivity) context).changeColor(task);
                             clickSound.start();
                             return true;
-                        }else if (id == R.id.change_name){
+                        } else if (id == R.id.change_name){
                             ((MainActivity) context).changeName(task);
                             clickSound.start();
                             return true;
-                        } else if (id == R.id.pin_task){
-                            ((MainActivity) context).pinTask(tasks, task);
+                        } else if (id == R.id.pin_task) {
+                            if (task.isPinned()) {
+                                ((MainActivity) context).unpinTask(tasks, task, adapter);
+                                item.setTitle("Pin");  // Update the MenuItem title to "Pin"
+                                task.setPinned(false);  // Update the pinned status of the task
+                            } else {
+                                ((MainActivity) context).pinTask(tasks, task, adapter);
+                                item.setTitle("Unpin");  // Update the MenuItem title to "Unpin"
+                                task.setPinned(true);  // Update the pinned status of the task
+                            }
+
+                            // Notify the adapter of the data change
+                            adapter.notifyDataSetChanged();
+                            return true;
                         }
+
                         return false;
                     }
                 };
@@ -210,6 +241,7 @@ public class TaskAdapter extends ArrayAdapter<ToDoModel> {
         ImageButton continueButton;
 
         RelativeLayout layout;
+        ImageView pinIcon;
     }
 }
 

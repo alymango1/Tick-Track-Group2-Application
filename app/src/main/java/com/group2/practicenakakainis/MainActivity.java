@@ -23,6 +23,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -35,6 +37,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -114,6 +118,21 @@ public class MainActivity extends AppCompatActivity {
             showDialog();
         }
 
+        ImageButton drawerButton = findViewById(R.id.drawer_button);
+        final DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        drawerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+
+        // Set status bar color
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.beige));
+        }
 
 
         replaceFragments(new HomeFragment());
@@ -531,9 +550,12 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    public void pinTask(List<ToDoModel> tasks, ToDoModel task) {
+    public void pinTask(List<ToDoModel> tasks, ToDoModel task, TaskAdapter adapter) {
         // Get the instance of DataBaseHelper
         DataBaseHelper dbHelper = new DataBaseHelper(this);
+
+        MediaPlayer pinSound = MediaPlayer.create(this, R.raw.ping_sounds);
+        pinSound.start();
 
         // Pin the task in the database
         dbHelper.pinTask(task.getId());
@@ -547,11 +569,32 @@ public class MainActivity extends AppCompatActivity {
         // Add the task back at the top of the list
         tasks.add(0, task);
 
-        // Get the instance of HomeFragment and call loadTasks
-        HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
-        if (homeFragment != null) {
-            homeFragment.loadTasks();
-        }
+        // Notify the adapter that the data set has changed
+        adapter.notifyDataSetChanged();
+    }
+
+    public void unpinTask(List<ToDoModel> tasks, ToDoModel task, TaskAdapter adapter) {
+        // Get the instance of DataBaseHelper
+        DataBaseHelper dbHelper = new DataBaseHelper(this);
+
+        MediaPlayer unpinSound = MediaPlayer.create(this, R.raw.homeblock_sound);
+        unpinSound.start();
+
+
+        // Unpin the task in the database
+        dbHelper.unpinTask(task.getId());
+
+        // Remove the task from its current position in the list
+        tasks.remove(task);
+
+        // Set the task as unpinned
+        task.setPinned(false);
+
+        // Add the task back at the end of the list
+        tasks.add(task);
+
+        // Notify the adapter that the data set has changed
+        adapter.notifyDataSetChanged();
     }
 
 

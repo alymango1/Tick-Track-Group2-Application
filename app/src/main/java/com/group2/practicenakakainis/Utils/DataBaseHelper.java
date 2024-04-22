@@ -30,7 +30,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 
     public DataBaseHelper(@Nullable Context context) {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 3);
     }
 
     @Override
@@ -46,7 +46,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_5 + " INTEGER DEFAULT 0");
         }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN PINNED INTEGER DEFAULT 0");
+        }
     }
+
 
     public void pinTask(int id) {
         db = this.getWritableDatabase();
@@ -100,14 +104,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     @SuppressLint("Range")
     public List<ToDoModel> getAllTasks() {
-
         db = this.getWritableDatabase();
         Cursor cursor = null;
         List<ToDoModel> modelList = new ArrayList<>();
 
         db.beginTransaction();
         try {
-            cursor = db.query(TABLE_NAME, null, null, null, null, null, null);
+            cursor = db.query(TABLE_NAME, null, null, null, null, null, COL_5 + " DESC, " + COL_1 + " ASC");
             if (cursor != null && cursor.moveToFirst()) {
                 do {
                     ToDoModel task = new ToDoModel();
@@ -115,6 +118,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                     task.setTask(cursor.getString(cursor.getColumnIndex(COL_2)));
                     task.setStatus(cursor.getInt(cursor.getColumnIndex(COL_3)));
                     task.setColor(cursor.getInt(cursor.getColumnIndex(COL_4)));  // Load the color of the task
+                    task.setPinned(cursor.getInt(cursor.getColumnIndex(COL_5)) == 1);  // Load the pinned status
                     modelList.add(task);
                 } while (cursor.moveToNext());
             }

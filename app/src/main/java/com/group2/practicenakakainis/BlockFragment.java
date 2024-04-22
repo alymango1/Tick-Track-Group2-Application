@@ -42,6 +42,8 @@ public class BlockFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MediaPlayer buttonSound = MediaPlayer.create(getContext(), R.raw.button_sound);
+                buttonSound.start();
                 progressDialog = new ProgressDialog(getActivity());
                 progressDialog.setMessage("Loading...");
                 progressDialog.setCancelable(true);
@@ -85,6 +87,8 @@ public class BlockFragment extends Fragment {
                         // Open the accessibility settings
                         MainActivity.isPickerShown = false;
                         AccessibilityUtils.openAccessibilitySettings(getActivity());
+                        MediaPlayer okSound = MediaPlayer.create(getContext(), R.raw.button_sound);
+                        okSound.start();
                         dialog.dismiss();
                         progressDialog.dismiss();
                     }
