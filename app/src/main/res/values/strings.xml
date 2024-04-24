@@ -7,7 +7,7 @@
     <string name="importance_of_accessibility">\tTick Track Service will be responsible for tracking and managing the restriction of applications. It detects whether the user opened a blocked application in the app itself. Without turning this service on, blocking apps would not be possible at all. This feature is the main highlight of the application. Therefore, everyone is encouraged to turn Tick Track Service on.</string>
     <string name="first_step">\tOnce you click the "Block Apps" button, you will be directed to the accessibility settings once you select the "Block Apps" option. You must locate "Tick Track" and turn it on there. </string>
     <string name="second_step">\tTick Track should be visible under downloaded apps. To activate the app, tap its name.</string>
-<string name="third_step">\tPress the Tick Track button to activate the switch.</string>
+    <string name="third_step">\tPress the Tick Track button to activate the switch.</string>
     <string name="fourth_step">\tA dialog would pop-up that would show what the service can do in the device. Tap allow to enable the service.</string>
     <string name="fifth_step">\tThe switch is intended to activate after enabling the service. With the Tick Track app, you can now restrict applications!</string>
     <string name="sixth_step">\tIn higher versions of Android, Google has implemented stricter security measures for accessibility. As a result, you might encounter a message in applications that are not available on the Google Play Store.</string>
@@ -23,7 +23,6 @@
     <string name="nav_header_subtitle">Created by Group 2</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="nav_header_title">Tick Track</string>
-
 
 
 </resources>

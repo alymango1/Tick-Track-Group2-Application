@@ -26,11 +26,11 @@ import android.widget.Toast;
 
 public class BlockFragment extends Fragment {
     private ProgressDialog progressDialog;
+    private MediaPlayer buttonSound;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_block, container, false);
     }
 
@@ -38,32 +38,31 @@ public class BlockFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Button button = view.findViewById(R.id.button_blk);
-        MediaPlayer buttonSound = MediaPlayer.create(getActivity(), R.raw.button_sound1);
+        buttonSound = MediaPlayer.create(getActivity(), R.raw.button_sound1);
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaPlayer buttonSound = MediaPlayer.create(getContext(), R.raw.button_sound);
-                buttonSound.start();
+                playSound(buttonSound);
                 progressDialog = new ProgressDialog(getActivity());
                 progressDialog.setMessage("Loading...");
                 progressDialog.setCancelable(true);
                 progressDialog.show();
 
-                if (AccessibilityUtils.isAccessibilityServiceRunning(getActivity(), MyAccessibilityService.class) && !MainActivity.isPickerShown) {
-                    blockListView(v);
-                    buttonSound.start();
-                    progressDialog.dismiss();
-                }else if (!MainActivity.isPickerShown){
+                if (AccessibilityUtils.isAccessibilityServiceRunning(getActivity(), MyAccessibilityService.class)) {
+                    if (!MainActivity.isPickerShown) {
+                        blockListView(v);
+                    }
+                } else if (!MainActivity.isPickerShown) {
                     MainActivity.isPickerShown = true;
                     checkAccessibility();
-                    buttonSound.start();
-                    progressDialog.dismiss();
                 }
             }
 
             public void blockListView(View v) {
                 Intent intent = new Intent(getActivity(), AppListView.class);
                 startActivity(intent);
+                progressDialog.dismiss();
             }
 
             public void checkAccessibility() {
@@ -87,13 +86,11 @@ public class BlockFragment extends Fragment {
                         // Open the accessibility settings
                         MainActivity.isPickerShown = false;
                         AccessibilityUtils.openAccessibilitySettings(getActivity());
-                        MediaPlayer okSound = MediaPlayer.create(getContext(), R.raw.button_sound);
-                        okSound.start();
+                        playSound(buttonSound);
                         dialog.dismiss();
                         progressDialog.dismiss();
                     }
                 });
-
 
                 AlertDialog dialog = builder.create();
 
@@ -105,11 +102,31 @@ public class BlockFragment extends Fragment {
         });
     }
 
+    private void playSound(MediaPlayer mediaPlayer) {
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(0);
+            mediaPlayer.start();
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
-        if (progressDialog != null) {
+        if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
+        }
+        if (buttonSound != null) {
+            buttonSound.release();
+            buttonSound = null;
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (buttonSound == null) {
+            buttonSound = MediaPlayer.create(getActivity(), R.raw.button_sound1);
         }
     }
 }
+

@@ -30,10 +30,10 @@ public class MyAccessibilityService extends AccessibilityService {
     private static final String SHARED_PREFERENCES_NAME = "APP_PREFERENCES";
     private static final String BLOCKED_APPS_KEY = "BLOCKED_APPS";
 
-
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        String packageName = event.getPackageName().toString();
+        try {
+            String packageName = event.getPackageName().toString();
 
         if (MainActivity.shouldBlockApps && isAppBlocked(packageName)) {
             Log.e(TAG, "Blocked app " + packageName + " was opened. Redirecting to home screen.");
@@ -62,26 +62,40 @@ public class MyAccessibilityService extends AccessibilityService {
             toast.setGravity(Gravity.BOTTOM,0,100);
             toast.show();
         }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onAccessibilityEvent", e);
+        }
     }
+
+
 
 
     @Override
     public void onInterrupt() {
-        Log.e(TAG, "onInterrupt: oops");
+        Log.e(TAG, "Accessibility service interrupted");
+        // Reconnect your service here
+        if (!AccessibilityUtils.isAccessibilityServiceRunning(this, MyAccessibilityService.class)) {
+            Intent intent = new Intent(this, MyAccessibilityService.class);
+            startService(intent);
+            Log.e(TAG, "Attempting to reconnect Accessibility Service...");
+        }
     }
+
 
     @Override
     public void onServiceConnected() {
         super.onServiceConnected();
 
         AccessibilityServiceInfo info = new AccessibilityServiceInfo();
-        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
-        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_SPOKEN;
-        info.notificationTimeout = 100;
-
+        info.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED | AccessibilityEvent.TYPE_VIEW_CLICKED;
+        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+        info.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
         this.setServiceInfo(info);
-        Log.e(TAG, "Tick Track Service is Connected Succesfully!");
+
+        Log.e(TAG, "Accessibility Service is Connected Successfully!");
     }
+
+
 
     private boolean isAppBlocked(String packageName) {
         Set<String> blockedApps = getBlockedApps();
@@ -91,5 +105,11 @@ public class MyAccessibilityService extends AccessibilityService {
     private Set<String> getBlockedApps() {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         return sharedPreferences.getStringSet(BLOCKED_APPS_KEY, new HashSet<>());
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Stop the service
+        stopSelf();
     }
 }

@@ -1,6 +1,8 @@
 package com.group2.practicenakakainis;
 
 import static java.security.AccessController.getContext;
+
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 
 import android.annotation.SuppressLint;
@@ -22,6 +24,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -35,14 +38,18 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.group2.practicenakakainis.Utils.DataBaseHelper;
@@ -50,15 +57,15 @@ import com.group2.practicenakakainis.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static long pauseStartTime;
     ActivityMainBinding binding;
-
-    List<String> folderNames = new ArrayList<>();
-    TaskAdapter adapter;
 
     public static final String SHARED_PREFERENCES_NAME = "APP_PREFERENCES";
     private static final String BLOCKED_APPS_KEY = "BLOCKED_APPS";
@@ -70,9 +77,11 @@ public class MainActivity extends AppCompatActivity {
 
     public static boolean isSessionActive = false;
 
-    public static boolean isPickerShown = false;
-
     public static boolean areAppsSelected = false;
+
+    private Map<String, Boolean> switchStates = new HashMap<>();
+
+    public static boolean isPickerShown = false;
 
     private int activeTaskId = -1;
 
@@ -82,6 +91,18 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
 
     private DataBaseHelper myDB;
+    private AlarmReceiver alarmReceiver;
+
+    private MediaPlayer homeblockSounds;
+    private MediaPlayer addSound;
+    private MediaPlayer errorSound;
+    private MediaPlayer showSound;
+    private MediaPlayer pinSound;
+    private MediaPlayer unpinSound;
+
+    private MediaPlayer drawerSound;
+
+    private NavigationView navigationView;
 
 
     private final ActivityResultLauncher<Intent> accessibilitySettingsLauncher = registerForActivityResult(
@@ -90,13 +111,17 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK) {
                     if (!AccessibilityUtils.isAccessibilityServiceRunning(MainActivity.this, MyAccessibilityService.class)) {
                         Toast toast = Toast.makeText(MainActivity.this, "Accessibility Service is not enabled", Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.BOTTOM,0,100);
+                        toast.setGravity(Gravity.BOTTOM, 0, 100);
                         toast.show();
                     }
                 }
             }
     );
 
+    public static void playSound(Context context) {
+        MediaPlayer pogi = MediaPlayer.create(context, R.raw.pogi);
+        pogi.start();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,16 +130,27 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        MediaPlayer homeblockSounds = MediaPlayer.create(this, R.raw.homeblock_sound);
+        homeblockSounds = MediaPlayer.create(this, R.raw.homeblock_sound);
+        addSound = MediaPlayer.create(this, R.raw.button_sound);
+        errorSound = MediaPlayer.create(this, R.raw.bloop);
+        showSound = MediaPlayer.create(this, R.raw.button_sound1);
+        pinSound = MediaPlayer.create(this, R.raw.ping_sounds);
+        unpinSound = MediaPlayer.create(this, R.raw.homeblock_sound);
+        drawerSound = MediaPlayer.create(this, R.raw.pop2);
+
         sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         if (getIntent().getAction() != null && getIntent().getAction().equals("ACTION_STOP")) {
             stopAlarm();
         }
 
+
+        alarmReceiver = new AlarmReceiver();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(alarmReceiver, new IntentFilter("UPDATE_UI"));
+
         boolean showDialog = getIntent().getBooleanExtra("showDialog", false);
         if (showDialog) {
-            // Show the dialog
             showDialog();
         }
 
@@ -123,54 +159,72 @@ public class MainActivity extends AppCompatActivity {
         drawerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                drawerSound.start();
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
 
-        // Set status bar color
+        navigationView = findViewById(R.id.nav_view);
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+
+                if (id == R.id.about_us) {
+                    Intent intent = new Intent(MainActivity.this, AboutUsActivity.class);
+                    startActivity(intent);
+                    addSound.start();
+                    return true;
+                } else if (id == R.id.settings) {
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                    addSound.start();
+                    return true;
+                }
+
+                return false;
+            }
+        });
+
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.beige));
         }
 
-
         replaceFragments(new HomeFragment());
         binding.bottomNavigationView.setBackground(null);
 
-        binding.bottomNavigationView.setOnItemSelectedListener(item ->
+        binding.bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
 
-    {
-        int itemId = item.getItemId();
+            if (itemId == R.id.homexd) {
+                replaceFragments(new HomeFragment());
+                FloatingActionButton fab = findViewById(R.id.add_task_button);
+                fab.setVisibility(View.VISIBLE);
+                TextView tv = findViewById(R.id.textView4);
+                tv.setText("Tasks");
+                homeblockSounds.start();
+            } else if (itemId == R.id.fabxd) {
+                // Handle the selection of the second menu item
+            } else if (itemId == R.id.blockxd) {
+                replaceFragments(new BlockFragment());
+                FloatingActionButton fab = findViewById(R.id.add_task_button);
+                fab.setVisibility(View.GONE);
+                TextView tv = findViewById(R.id.textView4);
+                tv.setText("Block");
+                homeblockSounds.start();
+            }
+            return true;
+        });
 
-        if (itemId == R.id.homexd) {
-            replaceFragments(new HomeFragment());
-            FloatingActionButton fab = findViewById(R.id.add_task_button);
-            fab.setVisibility(View.VISIBLE);
-            TextView tv = findViewById(R.id.textView4);
-            tv.setText("Tasks");
-            homeblockSounds.start();
-        } else if (itemId == R.id.fabxd) {
-            // Handle the selection of the second menu item
-        } else if (itemId == R.id.blockxd) {
-            replaceFragments(new BlockFragment());
-            FloatingActionButton fab = findViewById(R.id.add_task_button);
-            fab.setVisibility(View.GONE);
-            TextView tv = findViewById(R.id.textView4);
-            tv.setText("Block");
-            homeblockSounds.start();
-        }
+        createNotificationChannel();
 
-        return true;
-    });
-
-    createNotificationChannel();
-
-    myDB =new
-
-    DataBaseHelper(MainActivity .this);
-
-}
+        myDB = new DataBaseHelper(MainActivity.this);
+    }
 
     private void stopAlarm() {
         Intent intent = new Intent(this, AlarmReceiver.class);
@@ -181,25 +235,20 @@ public class MainActivity extends AppCompatActivity {
         alarmManager.cancel(pendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.cancel(123);
+        notificationManager.cancel(124);
     }
-
-
 
     @Override
     public void onBackPressed() {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.frame_layout);
         if (currentFragment instanceof HomeFragment) {
-        } else {
-            // If the current fragment is not HomeFragment, go back to the previous fragment
+        } else if (currentFragment instanceof BlockFragment){
             super.onBackPressed();
         }
         AccessibilityUtils.resetAccessibilitySettingsChecked(this);
     }
 
-
     private void createNotificationChannel() {
-
         String description = "Alarm Channel for Tick Track";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
@@ -210,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
             serviceChannel.setDescription(description);
 
             serviceChannel.enableVibration(true);
-            serviceChannel.setVibrationPattern(new long[]{0,1000,3000});
+            serviceChannel.setVibrationPattern(new long[]{0, 1000, 3000});
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
@@ -224,21 +273,17 @@ public class MainActivity extends AppCompatActivity {
         transaction.commit();
     }
 
-
     public void addTask(View v) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_add_task, null);
-
-        MediaPlayer addSound = MediaPlayer.create(this, R.raw.button_sound);
-        MediaPlayer errorSound = MediaPlayer.create(this, R.raw.bloop);
 
         EditText folderNameEditText = dialogView.findViewById(R.id.folder_nameText);
         Button saveButton = dialogView.findViewById(R.id.save_button);
         Button discardButton = dialogView.findViewById(R.id.cancelBtn);
         ImageButton palette = dialogView.findViewById(R.id.color_palette);
 
-        final AlertDialog dialog = builder.setView(dialogView).create();  // Declare dialog as final
+        final AlertDialog dialog = builder.setView(dialogView).create();
 
         addSound.start();
 
@@ -248,31 +293,25 @@ public class MainActivity extends AppCompatActivity {
                 String folderName = folderNameEditText.getText().toString();
 
                 if (!folderName.isEmpty()) {
-                    // Create a new ToDoModel object
                     ToDoModel newTask = new ToDoModel();
                     newTask.setTask(folderName);
-                    newTask.setStatus(0);  // Assuming default status is 0
+                    newTask.setStatus(0);
                     newTask.setColor(pickedColor);
 
-                    // Insert the new task into the database
                     myDB.insertTask(newTask);
 
-
-
-                    // Reload tasks from the database and update the ListView
                     HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
                     if (homeFragment != null) {
                         homeFragment.loadTasks();
-
                     }
 
-                    folderNameEditText.setText("");  // Clear the EditText
+                    folderNameEditText.setText("");
                     dialog.dismiss();
                     pickedColor = ContextCompat.getColor(MainActivity.this, R.color.background);
                     addSound.start();
                 } else {
                     Toast toast = Toast.makeText(getApplicationContext(), "Folder name cannot be empty", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.BOTTOM,0,100);
+                    toast.setGravity(Gravity.BOTTOM, 0, 100);
                     toast.show();
                     errorSound.start();
                 }
@@ -284,7 +323,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 errorSound.start();
                 dialog.dismiss();
-
             }
         });
 
@@ -363,12 +401,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Set the background drawable for the dialog
         dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
-
-        // Prevent the dialog from being dismissed on outside touch or back press
         dialog.setCancelable(false);
-
         dialog.show();
     }
 
@@ -376,8 +410,7 @@ public class MainActivity extends AppCompatActivity {
         if (MainActivity.isPickerShown) {
             return;
         }
-        MediaPlayer showSound = MediaPlayer.create(this, R.raw.button_sound1);
-        MediaPlayer errorSound = MediaPlayer.create(this, R.raw.bloop);
+
         MaterialTimePicker materialTimePicker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_12H)
                 .setHour(12)
@@ -392,7 +425,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 MainActivity.isTimeSelected = true;
-
                 isPickerShown = false;
 
                 showSound.start();
@@ -407,20 +439,15 @@ public class MainActivity extends AppCompatActivity {
                 selectedTime.set(Calendar.MINUTE, minute);
                 selectedTime.set(Calendar.SECOND, 0);
 
-
                 if (selectedTime.before(now)) {
                     selectedTime.add(Calendar.DATE, 1);
                 }
 
-                // Set selectedTimeInMillis to the actual timestamp, not the duration
                 MainActivity.selectedTimeInMillis = selectedTime.getTimeInMillis();
 
-                // Calculate the remaining time in minutes
-                long remainingTime = (MainActivity.selectedTimeInMillis - now.getTimeInMillis()) / 60000; // Convert milliseconds to minutes
-
-                // Show a toast with the remaining time
+                long remainingTime = (MainActivity.selectedTimeInMillis - now.getTimeInMillis()) / 60000;
                 Toast toast = Toast.makeText(MainActivity.this, "Alarm is set for " + remainingTime + " minute(s)", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.BOTTOM,0,100);
+                toast.setGravity(Gravity.BOTTOM, 0, 100);
                 toast.show();
                 Log.d("Alarm Time", "Alarm set for: " + new Date(MainActivity.selectedTimeInMillis));
             }
@@ -438,22 +465,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startTask(int taskId) {
-        // Set the active task ID
         activeTaskId = taskId;
     }
 
+    private boolean areAnyAppsSelected() {
+        for (boolean isSelected : switchStates.values()) {
+            if (isSelected) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void changeName(ToDoModel task) {
-        // Create and show the dialog
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_change_name);
         dialog.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
 
-        // Get the EditText and buttons from the dialog
         final EditText changeNameEditText = dialog.findViewById(R.id.change_name_editText);
         Button cancelButton = dialog.findViewById(R.id.cancelBtn);
         Button saveButton = dialog.findViewById(R.id.save_button);
 
-        // Set click listeners for the buttons
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -464,17 +496,13 @@ public class MainActivity extends AppCompatActivity {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Get the new name from the EditText
                 String newName = changeNameEditText.getText().toString();
 
-                // Update the task's name
                 task.setTask(newName);
 
-                // Update the task in the database
                 DataBaseHelper myDB = new DataBaseHelper(MainActivity.this);
                 myDB.updateTask(task.getId(), newName);
 
-                // Reload tasks from the database and update the ListView
                 HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
                 if (homeFragment != null) {
                     homeFragment.loadTasks();
@@ -486,7 +514,6 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
     }
-
 
     public void changeColor(final ToDoModel task) {
         Dialog dialog = new Dialog(this);
@@ -551,61 +578,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void pinTask(List<ToDoModel> tasks, ToDoModel task, TaskAdapter adapter) {
-        // Get the instance of DataBaseHelper
         DataBaseHelper dbHelper = new DataBaseHelper(this);
 
-        MediaPlayer pinSound = MediaPlayer.create(this, R.raw.ping_sounds);
         pinSound.start();
 
-        // Pin the task in the database
         dbHelper.pinTask(task.getId());
 
-        // Remove the task from its current position in the list
         tasks.remove(task);
 
-        // Set the task as pinned
         task.setPinned(true);
 
-        // Add the task back at the top of the list
         tasks.add(0, task);
 
-        // Notify the adapter that the data set has changed
         adapter.notifyDataSetChanged();
     }
 
     public void unpinTask(List<ToDoModel> tasks, ToDoModel task, TaskAdapter adapter) {
-        // Get the instance of DataBaseHelper
         DataBaseHelper dbHelper = new DataBaseHelper(this);
 
-        MediaPlayer unpinSound = MediaPlayer.create(this, R.raw.homeblock_sound);
         unpinSound.start();
 
-
-        // Unpin the task in the database
         dbHelper.unpinTask(task.getId());
 
-        // Remove the task from its current position in the list
         tasks.remove(task);
 
-        // Set the task as unpinned
         task.setPinned(false);
 
-        // Add the task back at the end of the list
         tasks.add(task);
 
-        // Notify the adapter that the data set has changed
         adapter.notifyDataSetChanged();
     }
 
 
-
     private void updateTaskColor(ToDoModel task, int colorResource) {
-        // Update the color of the task
         task.setColor(getResources().getColor(colorResource));
 
         myDB.updateTaskColor(task.getId(), task.getColor());
 
-        // Reload tasks from the database and update the ListView
         HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
         if (homeFragment != null) {
             homeFragment.loadTasks();
@@ -613,42 +622,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void deleteTask(int taskId) {
-        if (!isSessionActive){
-            // Delete the task from the database
+        if (!isSessionActive) {
             myDB.deleteTask(taskId);
 
-            // Reload tasks from the database and update the ListView
             HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentById(R.id.frame_layout);
             if (homeFragment != null) {
                 homeFragment.loadTasks();
             }
         } else {
             Toast toast = Toast.makeText(MainActivity.this, "A session is active. ", Toast.LENGTH_SHORT);
-            toast.setGravity(Gravity.BOTTOM,0,100);
+            toast.setGravity(Gravity.BOTTOM, 0, 100);
             toast.show();
         }
     }
 
     public void showDialog() {
-        // Create a new dialog
         Dialog dialog = new Dialog(this);
 
-        // Inflate the custom layout
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.finished_task_dialog, null);
 
-        // Set the custom layout as the dialog content
         dialog.setContentView(dialogView);
 
-        // Get the task name from the Intent
         Intent intent = getIntent();
         String taskName = intent.getStringExtra("taskName");
 
-        // Set the task name in the TextView
         TextView taskNameTextView = dialogView.findViewById(R.id.taskName);
         taskNameTextView.setText("The task " + taskName + " is finished");
 
-        // Show the dialog
         dialog.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (homeblockSounds != null) {
+            homeblockSounds.release();
+        }
+        if (addSound != null) {
+            addSound.release();
+        }
+        if (errorSound != null) {
+            errorSound.release();
+        }
+        if (showSound != null) {
+            showSound.release();
+        }
+        if (pinSound != null) {
+            pinSound.release();
+        }
+        if (unpinSound != null) {
+            unpinSound.release();
+        }
     }
 }

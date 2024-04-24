@@ -1,6 +1,8 @@
 package com.group2.practicenakakainis;
 
-public class ToDoModel {
+import java.io.Serializable;
+
+public class ToDoModel implements Serializable {
     private String task;
     private int id, status;
 

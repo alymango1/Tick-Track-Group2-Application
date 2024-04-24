@@ -28,12 +28,14 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
         listView = view.findViewById(R.id.folder_list);
-        db = new DataBaseHelper(getContext());
+        db = new DataBaseHelper(requireContext());
 
-        adapter = new TaskAdapter(getContext(), taskList);
+        // Instantiate TaskAdapter with the required parameters
+        adapter = new TaskAdapter(requireContext(), taskList);
+
         listView.setAdapter(adapter);
 
-        loadTasks(); // Load tasks from database
+        loadTasks();  // Load tasks from database
 
         return view;
     }
@@ -47,8 +49,8 @@ public class HomeFragment extends Fragment {
     }
 
     public void loadTasks() {
-        taskList.clear(); // Clear the existing list
-        taskList.addAll(db.getAllTasks()); // Fetch tasks from database
-        adapter.notifyDataSetChanged(); // Notify adapter about the data change
+        taskList.clear();  // Clear the existing list
+        taskList.addAll(db.getAllTasks());  // Fetch tasks from database
+        adapter.notifyDataSetChanged();  // Notify adapter about the data change
     }
 }

@@ -6,7 +6,7 @@ public class App {
     String name;
     String activityInfo;
     Drawable icon;
-    boolean isBlocked = false;
+    public boolean isBlocked;
 
     public App() {
     }
